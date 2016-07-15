@@ -37,6 +37,7 @@ func NewCommand(id, name string, data []byte) *Command {
 		cmd.ID = uuid.NewV4().String()
 	}
 
+	cmd.Name = name
 	cmd.Time = time.Now().UTC()
 	if len(data) == 0 {
 		data = make([]byte, 0)
@@ -87,5 +88,12 @@ func (cmr *CommandResult) HasFailed(err error) {
 		cmr.Err = err
 		cmr.Error = true
 		cmr.ErrMsg = err.Error()
+	}
+}
+
+func (cmr *CommandResult) Set(sr StoreResult) {
+	if sr.Error == nil {
+		cmr.Version = sr.Version
+		cmr.Correlation = sr.Correlation
 	}
 }
