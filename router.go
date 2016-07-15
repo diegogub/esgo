@@ -79,6 +79,9 @@ func (r *CommandRouter) Push(cmd *Command) *CommandResult {
 		result.ErrMsg = sres.Error.Error()
 	}
 
+	// set event result in command response
+	result.Set(sres)
+
 	return result
 }
 
