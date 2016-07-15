@@ -45,17 +45,26 @@ func NewCommand(id, name string, data []byte) *Command {
 	return &cmd
 }
 
+func (c *Command) SetEvent(i interface{}) error {
+	return json.Unmarshal(c.Data, &i)
+}
+
 // every command result
 type CommandResult struct {
 	Err    error  `json:"-"`
 	Error  bool   `json:"error"`
 	ErrMsg string `json:"errorMsg"`
 
-	Stream  string                 `json:"stream"`
-	Version uint64                 `json:"version"`
-	Data    map[string]interface{} `json:"data,omitempty"`
+	Stream      string                 `json:"stream"`
+	Version     uint64                 `json:"version"`
+	Correlation uint64                 `json:"correlation"`
+	Data        map[string]interface{} `json:"data,omitempty"`
 }
 
-func (c *Command) SetEvent(i interface{}) error {
-	return json.Unmarshal(c.Data, &i)
+func NewCommandResult(e Eventer) *CommandResult {
+	var cmdRes CommandResult
+	cmdRes.Stream = e.GetStreamID()
+	cmdRes.Version = e.GetVersion()
+	cmdRes.Data = make(map[string]interface{})
+	return &cmdRes
 }

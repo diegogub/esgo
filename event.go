@@ -9,6 +9,7 @@ type Eventer interface {
 	GetStreamID() string
 	GetType() string
 	GetVersion() uint64
+	GetCorrelation() uint64
 
 	GetStreamGroup() string
 	GetUserID() string
@@ -22,6 +23,7 @@ type BaseEvent struct {
 	eventstream string
 	eventType   string
 	version     uint64
+	correlation uint64
 }
 
 func (be *BaseEvent) GetEventID() string {
@@ -60,4 +62,12 @@ func (be *BaseEvent) GetVersion() uint64 {
 
 func (be *BaseEvent) SetVersion(v uint64) {
 	be.version = v
+}
+
+func (be *BaseEvent) GetCorrelation() uint64 {
+	return be.correlation
+}
+
+func (be *BaseEvent) SetCorrelation(v uint64) {
+	be.correlation = v
 }
