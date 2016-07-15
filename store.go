@@ -5,7 +5,8 @@ type EventStore interface {
 }
 
 type StoreResult struct {
-	Error   error
-	Stream  string
-	Version uint64
+	Error       error
+	Stream      string
+	Version     uint64
+	Correlation uint64
 }
