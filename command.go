@@ -8,11 +8,12 @@ import (
 )
 
 var (
-	ConcurrencyError = errors.New("Concurrency error")
+	ConcurrencyError   = errors.New("Concurrency error")
+	InvalidCommandName = errors.New("Invalid command name")
 )
 
 type CommandHandler interface {
-	Deal(cmd *Command) (Eventer, CommandResult)
+	Deal(cmd *Command) (Eventer, *CommandResult)
 }
 
 type Command struct {
@@ -45,6 +46,18 @@ func NewCommand(id, name string, data []byte) *Command {
 	return &cmd
 }
 
+func (c *Command) Validate() error {
+	if c.ID == "" {
+		c.ID = uuid.NewV4().String()
+	}
+
+	if c.Name == "" {
+		return InvalidCommandName
+	}
+
+	return nil
+}
+
 func (c *Command) SetEvent(i interface{}) error {
 	return json.Unmarshal(c.Data, &i)
 }
@@ -67,4 +80,12 @@ func NewCommandResult(e Eventer) *CommandResult {
 	cmdRes.Version = e.GetVersion()
 	cmdRes.Data = make(map[string]interface{})
 	return &cmdRes
+}
+
+func (cmr *CommandResult) HasFailed(err error) {
+	if err != nil {
+		cmr.Err = err
+		cmr.Error = true
+		cmr.ErrMsg = err.Error()
+	}
 }

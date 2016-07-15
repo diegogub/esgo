@@ -8,6 +8,7 @@ import (
 var (
 	InvalidCommand   = errors.New("Invalid Command, or no handler set")
 	FailedStoreEvent = errors.New("Failed to store event")
+	AuthFailed       = errors.New("Not authorized")
 )
 
 type CommandRouter struct {
@@ -15,6 +16,8 @@ type CommandRouter struct {
 	cmdHandlers map[string]CommandHandler
 	taskMap     map[string]TaskHandler
 	es          EventStore
+	auth        Auther
+	authcmd     bool
 }
 
 func NewCommandRouter(es EventStore) *CommandRouter {
@@ -26,19 +29,40 @@ func NewCommandRouter(es EventStore) *CommandRouter {
 }
 
 // Handle event into router, event handler will be executed
-func (r *CommandRouter) Push(cmd *Command) CommandResult {
+func (r *CommandRouter) Push(cmd *Command) *CommandResult {
+	err := cmd.Validate()
+	if err != nil {
+		res := &CommandResult{
+			Err:    InvalidCommand,
+			Error:  true,
+			ErrMsg: InvalidCommand.Error(),
+		}
+		return res
+	}
 
 	r.lock.RLock()
 	h, ok := r.cmdHandlers[cmd.Name]
 	r.lock.RUnlock()
 
 	if !ok {
-		res := CommandResult{
+		res := &CommandResult{
 			Err:    InvalidCommand,
 			Error:  true,
 			ErrMsg: InvalidCommand.Error(),
 		}
 		return res
+	}
+
+	if r.authcmd {
+		err := r.auth.Auth(cmd)
+		if err != nil {
+			res := &CommandResult{
+				Err:    AuthFailed,
+				Error:  true,
+				ErrMsg: AuthFailed.Error(),
+			}
+			return res
+		}
 	}
 
 	event, result := h.Deal(cmd)
@@ -59,7 +83,7 @@ func (r *CommandRouter) Push(cmd *Command) CommandResult {
 }
 
 // AddEventHandler registers event handlers into router, could be one handler for many keys
-func (r *CommandRouter) AddCom(h CommandHandler, keys ...string) {
+func (r *CommandRouter) AddCommandHandler(h CommandHandler, keys ...string) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
@@ -75,5 +99,17 @@ func (r *CommandRouter) AddTaskHandler(h TaskHandler, keys ...string) {
 
 	for _, k := range keys {
 		r.taskMap[k] = h
+	}
+}
+
+func (r *CommandRouter) SetAuth(auth Auther) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	if !r.authcmd {
+		r.auth = auth
+		r.authcmd = true
+	} else {
+		panic("auth already set")
 	}
 }
