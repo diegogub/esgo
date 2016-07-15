@@ -10,6 +10,10 @@ type Eventer interface {
 	GetType() string
 	GetVersion() uint64
 
+	GetStreamGroup() string
+	GetUserID() string
+
+	MustCreate() bool
 	GetData() []byte
 	CheckUniqueValue() []string
 }

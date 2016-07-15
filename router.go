@@ -2,23 +2,26 @@ package esgo
 
 import (
 	"errors"
-	"log"
 	"sync"
 )
 
 var (
-	InvalidCommand = errors.New("Invalid Command, or no handler set")
+	InvalidCommand   = errors.New("Invalid Command, or no handler set")
+	FailedStoreEvent = errors.New("Failed to store event")
 )
 
 type CommandRouter struct {
 	lock        sync.RWMutex
 	cmdHandlers map[string]CommandHandler
 	taskMap     map[string]TaskHandler
+	es          EventStore
 }
 
-func NewCommandRouter() *CommandRouter {
+func NewCommandRouter(es EventStore) *CommandRouter {
 	var cr CommandRouter
 	cr.cmdHandlers = make(map[string]CommandHandler)
+	cr.taskMap = make(map[string]TaskHandler)
+	cr.es = es
 	return &cr
 }
 
@@ -44,12 +47,19 @@ func (r *CommandRouter) Push(cmd *Command) CommandResult {
 	}
 
 	// store event
+	sres := r.es.Store(event)
+	if sres.Error != nil {
+		// Failed to store event
+		result.Err = FailedStoreEvent
+		result.Error = true
+		result.ErrMsg = sres.Error.Error()
+	}
 
 	return result
 }
 
 // AddEventHandler registers event handlers into router, could be one handler for many keys
-func (r *CommandRouter) AddEventHandler(h CommandHandler, keys ...string) {
+func (r *CommandRouter) AddCom(h CommandHandler, keys ...string) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
