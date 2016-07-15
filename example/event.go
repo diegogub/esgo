@@ -35,12 +35,13 @@ func (te ExampleEventDone) CheckUniqueValue() []string {
 	return []string{}
 }
 
-func (e *ExampleEventDone) Build() error {
+func (e *ExampleEventDone) Build(cmd *esgo.Command) error {
 	if e.ID == "" {
 		return InvalidExampleID
 	}
 	e.SetStream(e.ID)
 	e.SetType(ExampleDoneEvent)
+	e.SetVersion(cmd.Version)
 
 	e.Date = time.Now().UTC()
 	return nil

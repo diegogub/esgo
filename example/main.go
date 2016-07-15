@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"log"
+	"strconv"
 )
 
 var r *esgo.CommandRouter
@@ -32,7 +33,6 @@ func (c ExampleCmdHandler) Deal(cmd *esgo.Command) (esgo.Eventer, *esgo.CommandR
 
 	switch cmd.Name {
 	case "MakeExample":
-		log.Println("ACA")
 		event := &ExampleEventDone{}
 		res = esgo.NewCommandResult(event)
 
@@ -40,7 +40,7 @@ func (c ExampleCmdHandler) Deal(cmd *esgo.Command) (esgo.Eventer, *esgo.CommandR
 		cmd.SetEvent(event)
 
 		// try to build event
-		err := event.Build()
+		err := event.Build(cmd)
 
 		// print it as example
 		if err != nil {
@@ -48,7 +48,6 @@ func (c ExampleCmdHandler) Deal(cmd *esgo.Command) (esgo.Eventer, *esgo.CommandR
 		}
 
 		e = event
-		log.Println(">>>>", e)
 	}
 
 	return e, res
@@ -57,7 +56,18 @@ func (c ExampleCmdHandler) Deal(cmd *esgo.Command) (esgo.Eventer, *esgo.CommandR
 func HandleCommand(c *gin.Context) {
 	//Get name from header
 	cmdName := c.Request.Header.Get("Command")
-	log.Println(cmdName)
+	version := c.Request.Header.Get("Version")
+	var v uint64
+	var err error
+	if version != "" {
+		v, err = strconv.ParseUint(version, 10, 64)
+		if err != nil {
+			c.AbortWithStatus(400)
+			return
+		}
+	}
+
+	log.Println("Executing command:", cmdName)
 
 	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
@@ -66,6 +76,7 @@ func HandleCommand(c *gin.Context) {
 	}
 
 	command := esgo.NewCommand("", cmdName, body)
+	command.Version = v
 	cres := r.Push(command)
 	c.JSON(201, cres)
 }
