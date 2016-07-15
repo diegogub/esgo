@@ -5,10 +5,12 @@ import (
 	"errors"
 	"github.com/diegogub/esgo"
 	"gopkg.in/h2non/gentleman.v1/plugins/body"
+	"log"
 )
 
 var (
 	ESError = errors.New("Failed to store event")
+	Dev     bool
 )
 
 type ArangoEvent struct {
@@ -74,6 +76,10 @@ func (aes ArangoES) Store(event esgo.Eventer) esgo.StoreResult {
 	r, err := req.Send()
 	if err != nil {
 		res.Error = err
+	}
+
+	if Dev {
+		log.Println(r)
 	}
 
 	if r.StatusCode == 201 {
