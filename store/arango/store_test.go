@@ -1,7 +1,6 @@
 package arango
 
 import (
-	"encoding/json"
 	"github.com/diegogub/esgo"
 	"github.com/stretchr/testify/assert"
 	"log"
@@ -34,11 +33,6 @@ func (te TestEvent) GetUserID() string {
 
 func (te TestEvent) MustCreate() bool {
 	return false
-}
-
-func (te TestEvent) GetData() []byte {
-	b, _ := json.Marshal(te)
-	return b
 }
 
 func (te TestEvent) CheckUniqueValue() []string {

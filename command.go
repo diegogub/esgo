@@ -1,6 +1,7 @@
 package esgo
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/satori/go.uuid"
 	"time"
@@ -53,4 +54,8 @@ type CommandResult struct {
 	Stream  string                 `json:"stream"`
 	Version uint64                 `json:"version"`
 	Data    map[string]interface{} `json:"data,omitempty"`
+}
+
+func (c *Command) SetEvent(i interface{}) error {
+	return json.Unmarshal(c.Data, &i)
 }

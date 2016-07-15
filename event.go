@@ -14,7 +14,6 @@ type Eventer interface {
 	GetUserID() string
 
 	MustCreate() bool
-	GetData() []byte
 	CheckUniqueValue() []string
 }
 

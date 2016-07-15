@@ -52,7 +52,13 @@ func (aes ArangoES) Store(event esgo.Eventer) esgo.StoreResult {
 		Checks:  event.CheckUniqueValue(),
 	}
 
-	err := sEvent.SetData(event.GetData())
+	b, err := json.Marshal(event)
+	if err != nil {
+		res.Error = err
+		return res
+	}
+
+	err = sEvent.SetData(b)
 	if err != nil {
 		res.Error = err
 		return res
