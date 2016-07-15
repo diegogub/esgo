@@ -10,6 +10,8 @@ var (
 	InvalidExampleID = errors.New("invalid id for stream")
 )
 
+const ExampleDoneEvent = "ExampleDone"
+
 type ExampleEventDone struct {
 	esgo.BaseEvent
 	ID          string    `json:"id"`
@@ -33,11 +35,13 @@ func (te ExampleEventDone) CheckUniqueValue() []string {
 	return []string{}
 }
 
-func (ex *ExampleEventDone) Build() error {
-	var e ExampleEventDone
+func (e *ExampleEventDone) Build() error {
 	if e.ID == "" {
 		return InvalidExampleID
 	}
 	e.SetStream(e.ID)
+	e.SetType(ExampleDoneEvent)
+
+	e.Date = time.Now().UTC()
 	return nil
 }
